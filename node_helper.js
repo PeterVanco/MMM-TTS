@@ -25,6 +25,9 @@ module.exports = NodeHelper.create({
             this.config = payload;
         } else if (notification === 'TTS') {
 
+            // TODO: download and send local URI
+            // curl 'https://translate.google.com/translate_tts?ie=UTF-8&q=Hello%20Everyone&tl=en&client=tw-ob' -H 'Referer: http://translate.google.com/' -H 'User-Agent: stagefright/1.2 (Linux;Android 5.0)' > google_tts.mp3
+
             googleTTS(payload, this.config.voice, this.config.speed)   // speed normal = 1 (default), slow = 0.24
                 .then(function(url) {
 
