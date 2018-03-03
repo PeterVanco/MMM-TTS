@@ -21,6 +21,7 @@ Module.register('MMM-TTS', {
     start() {
         Log.info(`Starting module: ${this.name}`);
         this.tts = this.config.text;
+        this.audioTts = new Audio();
         this.sendSocketNotification('CONFIG', this.config);
     },
 
@@ -32,19 +33,72 @@ Module.register('MMM-TTS', {
         }
     },
 
-    socketNotificationReceived(notification) {
+    socketNotificationReceived(notification, payload) {
         if (notification === 'HIDE') {
             this.tts = this.config.text;
+            this.updateDom();
+        } else if (notification === 'GOOGLE_TTS_URL') {
+            this.googleTtsUrl = payload;
             this.updateDom();
         }
     },
 
     getDom() {
         const wrapper = document.createElement('div');
+        var self = this;
         if (this.config.debug === true) {
             wrapper.classList.add('thin', 'small', 'bright');
             wrapper.innerHTML = this.tts;
         }
+
+        if (this.googleTtsUrl) {
+
+            url = this.googleTtsUrl;
+            self.audioTts.src = url;
+            // self.audioTts.playbackRate = 1.3;
+            self.audioTts.play().then(function() {
+                console.log("Playback ok: " + url);
+                this.googleTtsUrl = null;
+            }).catch(function(error) {
+
+                // default failed
+                console.log("Playback failed: " + url);
+                url = url.replace(".com", ".sk");
+                self.audioTts.src = url;
+
+                self.audioTts.play().then(function() {
+                    console.log("Playback ok: " + url);
+                    this.googleTtsUrl = null;
+                }).catch(function(error) {
+
+                    console.log("Playback failed: " + url);
+                    url = url.replace("&prev=input", "");
+                    self.audioTts.src = url;
+
+                    self.audioTts.play().then(function() {
+                        console.log("Playback ok: " + url);
+                        this.googleTtsUrl = null;
+                    }).catch(function(error) {
+
+                        console.log("Playback failed: " + url);
+                        url = url.replace("&ttsspeed=" + self.config.speed, "");
+                        self.audioTts.src = url;
+
+                        self.audioTts.play().then(function() {
+                            console.log("Playback ok: " + url);
+                            this.googleTtsUrl = null;
+                        }).catch(function(error) {
+
+                            console.log("Playback failed: " + url);
+                        })
+                    })
+
+                })
+
+            })
+
+        }
+
         return wrapper;
     }
 });

@@ -25,6 +25,8 @@
     "eslint-plugin-import": "^2.2.0"
   },
   "dependencies": {
+    "google-translate-token": "^1.0.0",
+    "google-tts-api": "0.0.2",
     "say": "^0.9.0"
   }
 }
