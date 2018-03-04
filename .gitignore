@@ -1,5 +1,7 @@
 # Various Node ignoramuses.
 
+*.mp3
+
 logs
 *.log
 npm-debug.log*
