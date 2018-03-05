@@ -53,48 +53,14 @@ Module.register('MMM-TTS', {
 
         if (this.googleTtsUrl) {
 
-            url = this.googleTtsUrl;
+            const url = this.googleTtsUrl;
             self.audioTts.src = url;
-            // self.audioTts.playbackRate = 1.3;
+            self.audioTts.playbackRate = 1.2;
             self.audioTts.play().then(function() {
                 console.log("Playback ok: " + url);
                 this.googleTtsUrl = null;
             }).catch(function(error) {
-
-                // default failed
-                console.log("Playback failed: " + url);
-                url = url.replace(".com", ".sk");
-                self.audioTts.src = url;
-
-                self.audioTts.play().then(function() {
-                    console.log("Playback ok: " + url);
-                    this.googleTtsUrl = null;
-                }).catch(function(error) {
-
-                    console.log("Playback failed: " + url);
-                    url = url.replace("&prev=input", "");
-                    self.audioTts.src = url;
-
-                    self.audioTts.play().then(function() {
-                        console.log("Playback ok: " + url);
-                        this.googleTtsUrl = null;
-                    }).catch(function(error) {
-
-                        console.log("Playback failed: " + url);
-                        url = url.replace("&ttsspeed=" + self.config.speed, "");
-                        self.audioTts.src = url;
-
-                        self.audioTts.play().then(function() {
-                            console.log("Playback ok: " + url);
-                            this.googleTtsUrl = null;
-                        }).catch(function(error) {
-
-                            console.log("Playback failed: " + url);
-                        })
-                    })
-
-                })
-
+                console.log("Playback failed: " + url + ", error=" + error);
             })
 
         }

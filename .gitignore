@@ -1,6 +1,6 @@
 # Various Node ignoramuses.
 
-*.mp3
+cache/*.mp3
 
 logs
 *.log
