@@ -9,62 +9,79 @@
  */
 
 Module.register('MMM-TTS', {
-    tts: '',
 
     defaults: {
         text: 'MMM-TTS',
         voice: null,
-        speed: 1.0,
-        debug: false
+        speed: 1.2,
     },
+
+    tts: [],
+    playLock: false,
 
     start() {
         Log.info(`Starting module: ${this.name}`);
-        this.tts = this.config.text;
-        this.audioTts = new Audio();
         this.sendSocketNotification('CONFIG', this.config);
     },
 
     notificationReceived(notification, payload) {
         if (notification === 'MMM-TTS') {
             this.sendSocketNotification('TTS', payload);
-            this.tts = payload;
-            this.updateDom();
         }
     },
 
     socketNotificationReceived(notification, payload) {
-        if (notification === 'HIDE') {
-            this.tts = this.config.text;
-            this.updateDom();
-        } else if (notification === 'GOOGLE_TTS_URL') {
-            this.googleTtsUrl = payload;
-            this.updateDom();
+        if (notification === 'GOOGLE_TTS_URL') {
+            this.tts.push(payload);
+            this.playQueued();
+        }
+    },
+
+    logQueue: function() {
+        console.log("Current TTS queue: " + this.tts);
+    },
+
+    playQueued: function() {
+
+        if (this.playLock === true) {
+            return;
+        }
+
+        this.logQueue();
+
+        const self = this;
+        if (this.tts.length > 0) {
+            const current = this.tts.pop();
+            this.audioElement.src = current;
+            this.audioElement.playbackRate = this.config.speed;
+
+            this.playLock = true;
+            this.audioElement.play().then(function() {
+                console.log("Playback ok: " + current);
+            }).catch(function(error) {
+                console.log("Playback failed: " + current + ", error=" + error);
+                setTimeout(function() {
+                    self.playLock = false;
+                    self.playQueued();
+                }, 1000);
+            })
         }
     },
 
     getDom() {
-        const wrapper = document.createElement('div');
-        var self = this;
-        if (this.config.debug === true) {
-            wrapper.classList.add('thin', 'small', 'bright');
-            wrapper.innerHTML = this.tts;
+        if (this.audioElement) {
+            return this.audioElement;
+        } else {
+            const self = this;
+            this.audioElement = new Audio();
+            this.audioElement.onended = function() {
+                setTimeout(function() {
+                    self.playLock = false;
+                    self.playQueued();
+                }, 1000);
+            };
+            return this.audioElement;
         }
+    },
 
-        if (this.googleTtsUrl) {
-
-            const url = this.googleTtsUrl;
-            self.audioTts.src = url;
-            self.audioTts.playbackRate = 1.2;
-            self.audioTts.play().then(function() {
-                console.log("Playback ok: " + url);
-                this.googleTtsUrl = null;
-            }).catch(function(error) {
-                console.log("Playback failed: " + url + ", error=" + error);
-            })
-
-        }
-
-        return wrapper;
-    }
 });
