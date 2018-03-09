@@ -92,6 +92,7 @@ Module.register('MMM-TTS', {
             const self = this;
             this.audioElement = new Audio();
             this.audioElement.onended = function() {
+                console.log("Playback ended");
                 setTimeout(function() {
                     self.playLock = false;
                     self.playQueued();
