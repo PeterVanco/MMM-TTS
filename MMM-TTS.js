@@ -43,13 +43,28 @@ Module.register('MMM-TTS', {
 
     playQueued: function() {
 
-        if (this.playLock === true) {
-            return;
-        }
+        const self = this;
 
         this.logQueue();
 
-        const self = this;
+        if (this.playLock === true) {
+            console.log("Playback locked");
+            setTimeout(function() {
+                let isPlaying = self.audioElement
+                    && self.audioElement.currentTime > 0
+                    && !self.audioElement.paused
+                    && !self.audioElement.ended
+                    && self.audioElement.readyState > 2;
+
+                if (!isPlaying) {
+                    self.playLock = false;
+                    console.log("Force - unlocking");
+                }
+                self.playQueued();
+            }, 1000);
+            return;
+        }
+
         if (this.tts.length > 0) {
             const current = this.tts.pop();
             this.audioElement.src = current;
@@ -65,6 +80,8 @@ Module.register('MMM-TTS', {
                     self.playQueued();
                 }, 1000);
             })
+        } else {
+            console.log("Nothing for playback");
         }
     },
 
