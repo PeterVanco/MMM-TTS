@@ -14,6 +14,7 @@ Module.register('MMM-TTS', {
         text: 'MMM-TTS',
         voice: null,
         speed: 1.2,
+        handler: 'backend',
     },
 
     tts: [],
@@ -31,7 +32,9 @@ Module.register('MMM-TTS', {
     },
 
     socketNotificationReceived(notification, payload) {
-	return;
+        if (this.config.handler !== 'frontend') {
+            return;
+        }
         if (notification === 'GOOGLE_TTS_URL') {
             this.tts.push(payload);
             this.playQueued();
@@ -50,36 +53,36 @@ Module.register('MMM-TTS', {
 
         if (this.tts.length > 0) {
 
-		if (this.playLock === true) {
-		    console.log("Playback locked");
-		    return;
-		}
+            if (this.playLock === true) {
+                console.log("Playback locked");
+                return;
+            }
             this.playLock = true;
-		console.log("Locked: " + this.playLock);
+            console.log("Locked: " + this.playLock);
 
 
             const current = this.tts.shift();
-		// this.recreateAudioElement();
+            // this.recreateAudioElement();
             this.audioElement.src = current;
             this.audioElement.load();
             this.audioElement.playbackRate = this.config.speed;
 
-            this.audioElement.play().then(function() {
+            this.audioElement.playQueued().then(function() {
                 console.log("Playback ok: " + current);
-		setTimeout(function() {
-                	console.log("Checking missed onEnded event: ", self.playLock, self.audioElement.src, current);
-			if (self.playLock === true && self.audioElement.src.endsWith(current)) {
-                    		self.playLock = false;
-				console.log("Forced unlocked (replaying): " + self.playLock);
-			            self.tts.push(current);
-                    		self.playQueued();
-			}
-		}, 10000);
+                setTimeout(function() {
+                    console.log("Checking missed onEnded event: ", self.playLock, self.audioElement.src, current);
+                    if (self.playLock === true && self.audioElement.src.endsWith(current)) {
+                        self.playLock = false;
+                        console.log("Forced unlocked (replaying): " + self.playLock);
+                        self.tts.push(current);
+                        self.playQueued();
+                    }
+                }, 10000);
             }).catch(function(error) {
                 console.log("Playback failed: " + current + ", error=" + error);
                 setTimeout(function() {
                     self.playLock = false;
-		console.log("Unlocked: " + self.playLock);
+                    console.log("Unlocked: " + self.playLock);
                     self.playQueued();
                 }, 2000);
             })
@@ -92,24 +95,25 @@ Module.register('MMM-TTS', {
         if (this.audioElement) {
             return this.audioElement;
         } else {
-                console.log("Constructing new Audio element");
-		this.recreateAudioElement();
-            };
-            return this.audioElement;
-        },
+            console.log("Constructing new Audio element");
+            this.recreateAudioElement();
+        }
+        ;
+        return this.audioElement;
+    },
 
-	recreateAudioElement: function() {
-            const self = this;
+    recreateAudioElement: function() {
+        const self = this;
 
-            this.audioElement = new Audio();
-            this.audioElement.onended = function() {
-                console.log("Playback ended");
-                setTimeout(function() {
-                    self.playLock = false;
-		console.log("Unlocked: " + self.playLock);
-                    self.playQueued();
-                }, 2000);
-	}	
+        this.audioElement = new Audio();
+        this.audioElement.onended = function() {
+            console.log("Playback ended");
+            setTimeout(function() {
+                self.playLock = false;
+                console.log("Unlocked: " + self.playLock);
+                self.playQueued();
+            }, 2000);
+        }
     },
 
 });
