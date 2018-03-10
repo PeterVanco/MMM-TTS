@@ -34,6 +34,8 @@ module.exports = NodeHelper.create({
             if (fs.existsSync(path.join(osDependentCurrentDir, "cache", base64filename))) {
                 // console.log("TTS Cache hit for: " + payload);
                 self.sendSocketNotification('GOOGLE_TTS_URL', httpFilePath);
+		console.log("Playing " + payload);
+		exec(' mplayer -speed 1.2 -af ladspa=/usr/lib/ladspa/tap_pitch.so:tap_pitch:0:-15:-90:0 -ao alsa:device=hw=0.0 ' + path.join(osDependentCurrentDir, "cache", base64filename));
             }
             // cache miss, download
             else {
